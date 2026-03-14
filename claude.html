@@ -1,0 +1,3435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreInventory - Inventory Management System</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/font/lucide.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #6366F1;
+            --primary-dark: #4338CA;
+            --accent: #8B5CF6;
+            --accent-light: #A78BFA;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --info: #3B82F6;
+
+            /* Light mode */
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F1F5F9;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-tertiary: #334155;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(51, 65, 85, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 0 12px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            opacity: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(139, 92, 246, 0.1));
+            color: var(--primary);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .nav-label {
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-label {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sidebar.collapsed .nav-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .collapse-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .collapse-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .collapse-btn span {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .collapse-btn span {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed+.main-content {
+            margin-left: 80px;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            height: 72px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .navbar-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .navbar-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 64px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .theme-toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        [data-theme="dark"] .theme-toggle-slider {
+            transform: translateX(32px);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px 8px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-profile:hover {
+            border-color: var(--primary);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            text-align: left;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 32px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dashboard KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0.1;
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .kpi-icon.blue {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+        }
+
+        .kpi-icon.purple {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+        }
+
+        .kpi-icon.green {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+
+        .kpi-icon.orange {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+        }
+
+        .kpi-icon.red {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .kpi-trend.up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .kpi-trend.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .kpi-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Quick Filters */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Activity Timeline */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .activity-item:hover {
+            transform: translateX(4px);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.incoming {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .activity-icon.outgoing {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .activity-icon.transfer {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .activity-icon.adjustment {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .activity-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* Data Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+        }
+
+        .data-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .badge-purple {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+        }
+
+        /* Table Actions */
+        .table-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-search {
+            position: relative;
+            width: 280px;
+        }
+
+        .table-search input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .table-search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Product Detail Panel */
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 480px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            z-index: 200;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .detail-panel.open {
+            right: 0;
+        }
+
+        .detail-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 199;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .detail-panel-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .detail-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .detail-body {
+            padding: 24px;
+        }
+
+        /* Form Styles */
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .form-section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Steps Indicator */
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 60px;
+            right: 60px;
+            height: 2px;
+            background: var(--border);
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed .step-circle {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-color: var(--primary);
+            color: white;
+            animation: stepPulse 2s infinite;
+        }
+
+        @keyframes stepPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+            }
+        }
+
+        .step-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .step.completed .step-label,
+        .step.active .step-label {
+            color: var(--text-primary);
+        }
+
+        /* Adjustment Card */
+        .adjustment-card {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .adjustment-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .adjustment-row:last-child {
+            border-bottom: none;
+        }
+
+        .adjustment-label {
+            color: var(--text-secondary);
+        }
+
+        .adjustment-value {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .adjustment-value.positive {
+            color: var(--success);
+        }
+
+        .adjustment-value.negative {
+            color: var(--danger);
+        }
+
+        /* Warehouse Rack View */
+        .rack-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .rack-slot {
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .rack-slot:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .rack-slot.occupied {
+            background: rgba(16, 185, 129, 0.1);
+            border-style: solid;
+            border-color: var(--success);
+        }
+
+        .rack-slot.low-stock {
+            background: rgba(245, 158, 11, 0.1);
+            border-style: solid;
+            border-color: var(--warning);
+        }
+
+        .rack-slot-code {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .rack-slot-qty {
+            color: var(--text-muted);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timeline-dot svg {
+            width: 12px;
+            height: 12px;
+            color: var(--primary);
+        }
+
+        .timeline-content {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .timeline-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Notifications Dropdown */
+        .notifications-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 360px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px var(--shadow);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .notifications-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notifications-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .notifications-title {
+            font-weight: 600;
+        }
+
+        .notifications-clear {
+            font-size: 13px;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .notifications-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: calc(90vh - 140px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar.collapsed+.main-content {
+                margin-left: 0;
+            }
+
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .search-box {
+                width: 200px;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
+            .detail-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                display: none;
+            }
+
+            .table-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-search {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .rack-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .steps-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .steps-container::before {
+                display: none;
+            }
+
+            .step {
+                flex-direction: row;
+                gap: 16px;
+            }
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        /* Low Stock Alert Banner */
+        .alert-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
+            border: 1px solid var(--warning);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--warning);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .alert-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .alert-action {
+            padding: 8px 16px;
+            background: var(--warning);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .alert-action:hover {
+            background: #D97706;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">CI</div>
+                <span class="logo-text">CoreInventory</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a class="nav-item active" data-page="dashboard">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                        </svg>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    <a class="nav-item" data-page="products">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                            <line x1="12" y1="22.08" x2="12" y2="12" />
+                        </svg>
+                        <span class="nav-label">Products</span>
+                        <span class="nav-badge">248</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Operations</div>
+                    <a class="nav-item" data-page="receipts">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                            <path d="M12 6v6l4 2" />
+                        </svg>
+                        <span class="nav-label">Receipts</span>
+                        <span class="nav-badge">5</span>
+                    </a>
+                    <a class="nav-item" data-page="deliveries">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="3" width="15" height="13" rx="2" />
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                            <circle cx="5.5" cy="18.5" r="2.5" />
+                            <circle cx="18.5" cy="18.5" r="2.5" />
+                        </svg>
+                        <span class="nav-label">Delivery Orders</span>
+                    </a>
+                    <a class="nav-item" data-page="transfers">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17 1 21 5 17 9" />
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                            <polyline points="7 23 3 19 7 15" />
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                        </svg>
+                        <span class="nav-label">Internal Transfers</span>
+                    </a>
+                    <a class="nav-item" data-page="adjustments">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        <span class="nav-label">Inventory Adjustment</span>
+                    </a>
+                    <a class="nav-item" data-page="history">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="12 8 12 12 14 14" />
+                            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
+                        </svg>
+                        <span class="nav-label">Move History</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a class="nav-item" data-page="warehouse">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        <span class="nav-label">Warehouse Settings</span>
+                    </a>
+                    <a class="nav-item" data-page="profile">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span class="nav-label">Profile</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="collapse-btn" id="collapseBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="11 17 6 12 11 7" />
+                        <polyline points="18 17 13 12 18 7" />
+                    </svg>
+                    <span>Collapse</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="navbar">
+                <div class="navbar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" placeholder="Search products by SKU or name...">
+                    </div>
+                </div>
+
+                <div class="navbar-right">
+                    <div style="position: relative;">
+                        <button class="navbar-btn" id="notificationBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                            <span class="notification-dot"></span>
+                        </button>
+
+                        <div class="notifications-dropdown" id="notificationsDropdown">
+                            <div class="notifications-header">
+                                <span class="notifications-title">Notifications</span>
+                                <span class="notifications-clear">Clear all</span>
+                            </div>
+                            <div class="notifications-list">
+                                <div class="notification-item">
+                                    <div class="notification-icon"
+                                        style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path
+                                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                            <line x1="12" y1="9" x2="12" y2="13" />
+                                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                                        </svg>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-text"><strong>Low Stock Alert:</strong> iPhone 15 Pro
+                                            Max (SKU: IPH15PM) is below minimum threshold</div>
+                                        <div class="notification-time">2 minutes ago</div>
+                                    </div>
+                                </div>
+                                <div class="notification-item">
+                                    <div class="notification-icon"
+                                        style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-text"><strong>Receipt Completed:</strong> REC-2024-0847
+                                            validated successfully</div>
+                                        <div class="notification-time">15 minutes ago</div>
+                                    </div>
+                                </div>
+                                <div class="notification-item">
+                                    <div class="notification-icon"
+                                        style="background: rgba(59, 130, 246, 0.1); color: var(--info);">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="17 1 21 5 17 9" />
+                                            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                                        </svg>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-text"><strong>Transfer Initiated:</strong> 50 units
+                                            moved from WH-A to WH-B</div>
+                                        <div class="notification-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                                <div class="notification-item">
+                                    <div class="notification-icon"
+                                        style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="1" y="3" width="15" height="13" rx="2" />
+                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                        </svg>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-text"><strong>Delivery Pending:</strong> DEL-2024-0523
+                                            waiting for pickup</div>
+                                        <div class="notification-time">2 hours ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theme-toggle" id="themeToggle">
+                        <div class="theme-toggle-slider">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="themeIcon">
+                                <circle cx="12" cy="12" r="5" />
+                                <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" />
+                                <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor"
+                                    stroke-width="2" />
+                                <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" />
+                                <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor"
+                                    stroke-width="2" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor"
+                                    stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="user-profile">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name">John Doe</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Dashboard Page -->
+                <div class="page active" id="dashboard-page">
+                    <!-- Low Stock Alert Banner -->
+                    <div class="alert-banner">
+                        <div class="alert-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Low Stock Alert</div>
+                            <div class="alert-text">12 products are below minimum stock threshold and need immediate
+                                attention.</div>
+                        </div>
+                        <button class="alert-action">View Products</button>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon blue">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                    </svg>
+                                </div>
+                                <span class="kpi-trend up">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                    </svg>
+                                    +12.5%
+                                </span>
+                            </div>
+                            <div class="kpi-value" id="totalStock">0</div>
+                            <div class="kpi-label">Total Products in Stock</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon red">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                        <line x1="12" y1="9" x2="12" y2="13" />
+                                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                                    </svg>
+                                </div>
+                                <span class="kpi-trend down">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                                    </svg>
+                                    -3.2%
+                                </span>
+                            </div>
+                            <div class="kpi-value" id="lowStock">0</div>
+                            <div class="kpi-label">Low Stock Items</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon green">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                                        <path d="M12 6v6l4 2" />
+                                    </svg>
+                                </div>
+                                <span class="kpi-trend up">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                    </svg>
+                                    +8.1%
+                                </span>
+                            </div>
+                            <div class="kpi-value" id="outStock">0</div>
+                            <div class="kpi-label">Pending Receipts</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon orange">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13" rx="2" />
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                        <circle cx="5.5" cy="18.5" r="2.5" />
+                                        <circle cx="18.5" cy="18.5" r="2.5" />
+                                    </svg>
+                                </div>
+                                <span class="kpi-trend up">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                    </svg>
+                                    +15.3%
+                                </span>
+                            </div>
+                            <div class="kpi-value">18</div>
+                            <div class="kpi-label">Pending Deliveries</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon purple">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="17 1 21 5 17 9" />
+                                        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                                        <polyline points="7 23 3 19 7 15" />
+                                        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                                    </svg>
+                                </div>
+                                <span class="kpi-trend up">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                    </svg>
+                                    +5.7%
+                                </span>
+                            </div>
+                            <div class="kpi-value">7</div>
+                            <div class="kpi-label">Transfers Scheduled</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Chart Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Inventory Activity</h3>
+                                <select class="filter-select" style="width: auto;">
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                    <option>Last 90 Days</option>
+                                </select>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="activityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Filters & Activity -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <!-- Quick Filters -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Quick Filters</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="filter-grid">
+                                        <div class="filter-group">
+                                            <label class="filter-label">Document Type</label>
+                                            <select class="filter-select">
+                                                <option>All Types</option>
+                                                <option>Receipts</option>
+                                                <option>Delivery</option>
+                                                <option>Internal Transfer</option>
+                                                <option>Adjustments</option>
+                                            </select>
+                                        </div>
+                                        <div class="filter-group">
+                                            <label class="filter-label">Status</label>
+                                            <select class="filter-select">
+                                                <option>All Status</option>
+                                                <option>Draft</option>
+                                                <option>Waiting</option>
+                                                <option>Ready</option>
+                                                <option>Done</option>
+                                                <option>Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <div class="filter-group">
+                                            <label class="filter-label">Warehouse</label>
+                                            <select class="filter-select">
+                                                <option>All Warehouses</option>
+                                                <option>Warehouse A</option>
+                                                <option>Warehouse B</option>
+                                                <option>Warehouse C</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <div class="card" style="flex: 1;">
+                                <div class="card-header">
+                                    <h3 class="card-title">Recent Activity</h3>
+                                    <a href="#"
+                                        style="color: var(--primary); font-size: 14px; text-decoration: none;">View
+                                        All</a>
+                                </div>
+                                <div class="card-body" style="padding: 16px;">
+                                    <div class="activity-list">
+                                        <div class="activity-item">
+                                            <div class="activity-icon incoming">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                                </svg>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Receipt REC-2024-0847</div>
+                                                <div class="activity-meta">150 units received from TechSupply Co.</div>
+                                            </div>
+                                            <div class="activity-time">2m ago</div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon outgoing">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                                                </svg>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Delivery DEL-2024-0523</div>
+                                                <div class="activity-meta">75 units shipped to RetailMax</div>
+                                            </div>
+                                            <div class="activity-time">15m ago</div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon transfer">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polyline points="17 1 21 5 17 9" />
+                                                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                                                </svg>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Transfer TRF-2024-0156</div>
+                                                <div class="activity-meta">50 units moved WH-A → WH-B</div>
+                                            </div>
+                                            <div class="activity-time">1h ago</div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon adjustment">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                </svg>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Adjustment ADJ-2024-0089</div>
+                                                <div class="activity-meta">Stock count correction for SKU-2847</div>
+                                            </div>
+                                            <div class="activity-time">3h ago</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Page -->
+                <div class="page" id="products-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Product Inventory</h3>
+                            <button class="btn btn-primary" id="addProductBtn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add Product
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-actions">
+                                <div class="table-search">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    </svg>
+                                    <input type="text" placeholder="Search products...">
+                                </div>
+                                <div class="table-filters">
+                                    <select class="filter-select">
+                                        <option>All Categories</option>
+                                        <option>Electronics</option>
+                                        <option>Accessories</option>
+                                        <option>Components</option>
+                                    </select>
+                                    <select class="filter-select">
+                                        <option>All Status</option>
+                                        <option>In Stock</option>
+                                        <option>Low Stock</option>
+                                        <option>Out of Stock</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>SKU</th>
+                                            <th>Category</th>
+                                            <th>Stock Qty</th>
+                                            <th>Location</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productTable">
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipts Page -->
+                <div class="page" id="receipts-page">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h3 class="card-title">New Receipt</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">Supplier Name</label>
+                                        <select class="form-select">
+                                            <option>Select Supplier...</option>
+                                            <option>TechSupply Co.</option>
+                                            <option>Global Electronics</option>
+                                            <option>Prime Distributors</option>
+                                            <option>SmartGoods Inc.</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Warehouse Location</label>
+                                        <select class="form-select">
+                                            <option>Select Warehouse...</option>
+                                            <option>Warehouse A - Main</option>
+                                            <option>Warehouse B - Secondary</option>
+                                            <option>Warehouse C - Overflow</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Product</label>
+                                        <select class="form-select">
+                                            <option>Search or select product...</option>
+                                            <option>iPhone 15 Pro Max (IPH15PM-256)</option>
+                                            <option>Samsung Galaxy S24 Ultra (SGS24U-512)</option>
+                                            <option>AirPods Pro 2nd Gen (APP2-WHT)</option>
+                                            <option>MacBook Pro 16" M3 (MBP16M3-1TB)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Quantity</label>
+                                        <input type="number" class="form-input" placeholder="Enter quantity"
+                                            value="100">
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label class="form-label">Notes</label>
+                                        <textarea class="form-input form-textarea"
+                                            placeholder="Add any notes about this receipt..."></textarea>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 20px;">
+                                    <button class="btn btn-primary">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                        Validate Receipt
+                                    </button>
+                                    <button class="btn btn-secondary" style="margin-left: 12px;">Save as Draft</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Receipt History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Receipt ID</th>
+                                            <th>Supplier</th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Warehouse</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>REC-2024-0847</strong></td>
+                                            <td>TechSupply Co.</td>
+                                            <td>iPhone 15 Pro Max</td>
+                                            <td>150</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 15, 2024</td>
+                                            <td><span class="badge badge-success">Done</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>REC-2024-0846</strong></td>
+                                            <td>Global Electronics</td>
+                                            <td>Samsung Galaxy S24</td>
+                                            <td>200</td>
+                                            <td>Warehouse B</td>
+                                            <td>Jan 14, 2024</td>
+                                            <td><span class="badge badge-success">Done</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>REC-2024-0845</strong></td>
+                                            <td>Prime Distributors</td>
+                                            <td>AirPods Pro 2nd Gen</td>
+                                            <td>500</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 14, 2024</td>
+                                            <td><span class="badge badge-info">Waiting</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>REC-2024-0844</strong></td>
+                                            <td>SmartGoods Inc.</td>
+                                            <td>USB-C Hub 7-in-1</td>
+                                            <td>300</td>
+                                            <td>Warehouse C</td>
+                                            <td>Jan 13, 2024</td>
+                                            <td><span class="badge badge-purple">Draft</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deliveries Page -->
+                <div class="page" id="deliveries-page">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h3 class="card-title">Delivery Order #DEL-2024-0524</h3>
+                            <span class="badge badge-info">In Progress</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Steps Indicator -->
+                            <div class="steps-container">
+                                <div class="step completed">
+                                    <div class="step-circle">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+                                    <span class="step-label">Pick Items</span>
+                                </div>
+                                <div class="step active">
+                                    <div class="step-circle">2</div>
+                                    <span class="step-label">Pack Items</span>
+                                </div>
+                                <div class="step">
+                                    <div class="step-circle">3</div>
+                                    <span class="step-label">Validate Delivery</span>
+                                </div>
+                            </div>
+
+                            <!-- Current Step Content -->
+                            <div class="form-section" style="margin-top: 32px;">
+                                <h4 class="form-section-title">Pack Items</h4>
+                                <div
+                                    style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                        <div>
+                                            <div style="font-weight: 600;">iPhone 15 Pro Max</div>
+                                            <div style="font-size: 13px; color: var(--text-muted);">SKU: IPH15PM-256
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 13px; color: var(--text-muted);">Quantity to Pack
+                                            </div>
+                                            <div style="font-weight: 600; font-size: 20px;">25 units</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">Package Type</label>
+                                            <select class="form-select">
+                                                <option>Standard Box</option>
+                                                <option>Fragile Box</option>
+                                                <option>Pallet</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Package Weight (kg)</label>
+                                            <input type="number" class="form-input" value="12.5">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn btn-secondary">← Back to Pick</button>
+                                    <button class="btn btn-primary">Confirm Packing →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Delivery Orders</h3>
+                            <button class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                New Delivery
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Delivery ID</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Warehouse</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>DEL-2024-0524</strong></td>
+                                            <td>RetailMax Store</td>
+                                            <td>3 products</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 15, 2024</td>
+                                            <td><span class="badge badge-info">Packing</span></td>
+                                            <td><button class="btn btn-secondary"
+                                                    style="padding: 8px 16px;">Process</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>DEL-2024-0523</strong></td>
+                                            <td>TechWorld Inc.</td>
+                                            <td>5 products</td>
+                                            <td>Warehouse B</td>
+                                            <td>Jan 15, 2024</td>
+                                            <td><span class="badge badge-warning">Picking</span></td>
+                                            <td><button class="btn btn-secondary"
+                                                    style="padding: 8px 16px;">Process</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>DEL-2024-0522</strong></td>
+                                            <td>GadgetZone</td>
+                                            <td>2 products</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 14, 2024</td>
+                                            <td><span class="badge badge-success">Done</span></td>
+                                            <td><button class="btn btn-secondary"
+                                                    style="padding: 8px 16px;">View</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfers Page -->
+                <div class="page" id="transfers-page">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h3 class="card-title">New Internal Transfer</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">From Location</label>
+                                    <select class="form-select">
+                                        <option>Select source...</option>
+                                        <option>Warehouse A - Main</option>
+                                        <option>Warehouse B - Secondary</option>
+                                        <option>Warehouse C - Overflow</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">To Location</label>
+                                    <select class="form-select">
+                                        <option>Select destination...</option>
+                                        <option>Warehouse A - Main</option>
+                                        <option>Warehouse B - Secondary</option>
+                                        <option>Warehouse C - Overflow</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Product</label>
+                                    <select class="form-select">
+                                        <option>Select product...</option>
+                                        <option>iPhone 15 Pro Max (IPH15PM-256)</option>
+                                        <option>Samsung Galaxy S24 Ultra (SGS24U-512)</option>
+                                        <option>AirPods Pro 2nd Gen (APP2-WHT)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" class="form-input" placeholder="Enter quantity">
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <button class="btn btn-primary">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="17 1 21 5 17 9" />
+                                        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                                    </svg>
+                                    Initiate Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Transfer History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">TRF-2024-0156 - Completed</div>
+                                        <div style="margin: 8px 0; font-size: 14px;">50 units of iPhone 15 Pro Max moved
+                                            from <strong>Warehouse A</strong> to <strong>Warehouse B</strong></div>
+                                        <div class="timeline-date">January 15, 2024 at 2:30 PM</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">TRF-2024-0155 - Completed</div>
+                                        <div style="margin: 8px 0; font-size: 14px;">100 units of AirPods Pro moved from
+                                            <strong>Warehouse B</strong> to <strong>Warehouse C</strong>
+                                        </div>
+                                        <div class="timeline-date">January 14, 2024 at 10:15 AM</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">TRF-2024-0154 - Completed</div>
+                                        <div style="margin: 8px 0; font-size: 14px;">25 units of MacBook Pro 16" moved
+                                            from <strong>Warehouse C</strong> to <strong>Warehouse A</strong></div>
+                                        <div class="timeline-date">January 13, 2024 at 4:45 PM</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adjustments Page -->
+                <div class="page" id="adjustments-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Inventory Adjustment</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid" style="margin-bottom: 24px;">
+                                <div class="form-group">
+                                    <label class="form-label">Select Product</label>
+                                    <select class="form-select" id="adjustProduct">
+                                        <option>Search or select product...</option>
+                                        <option value="iphone">iPhone 15 Pro Max (IPH15PM-256)</option>
+                                        <option value="samsung">Samsung Galaxy S24 Ultra (SGS24U-512)</option>
+                                        <option value="airpods">AirPods Pro 2nd Gen (APP2-WHT)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Warehouse</label>
+                                    <select class="form-select">
+                                        <option>Select warehouse...</option>
+                                        <option>Warehouse A - Main</option>
+                                        <option>Warehouse B - Secondary</option>
+                                        <option>Warehouse C - Overflow</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="adjustment-card">
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: center;">
+                                    <div>
+                                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+                                            System Quantity</div>
+                                        <div style="font-size: 32px; font-weight: 700; color: var(--text-primary);">145
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+                                            Counted Quantity</div>
+                                        <input type="number" class="form-input"
+                                            style="text-align: center; font-size: 24px; font-weight: 600; max-width: 150px; margin: 0 auto;"
+                                            value="142" id="countedQty">
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+                                            Difference</div>
+                                        <div style="font-size: 32px; font-weight: 700;"
+                                            class="adjustment-value negative" id="difference">-3</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 24px;">
+                                <label class="form-label">Adjustment Reason</label>
+                                <select class="form-select">
+                                    <option>Select reason...</option>
+                                    <option>Physical Count Variance</option>
+                                    <option>Damaged Goods</option>
+                                    <option>Theft/Loss</option>
+                                    <option>Data Entry Error</option>
+                                    <option>Return Processing</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 24px;">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-input form-textarea"
+                                    placeholder="Add notes about this adjustment..."></textarea>
+                            </div>
+
+                            <button class="btn btn-success">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Update Stock
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Move History Page -->
+                <div class="page" id="history-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Stock Movement History</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <select class="filter-select">
+                                    <option>All Types</option>
+                                    <option>Receipts</option>
+                                    <option>Deliveries</option>
+                                    <option>Transfers</option>
+                                    <option>Adjustments</option>
+                                </select>
+                                <select class="filter-select">
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                    <option>Last 90 Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Type</th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Location</th>
+                                            <th>Date</th>
+                                            <th>User</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>REC-2024-0847</strong></td>
+                                            <td><span class="badge badge-success">Receipt</span></td>
+                                            <td>iPhone 15 Pro Max</td>
+                                            <td style="color: var(--success);">+150</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 15, 2024 14:30</td>
+                                            <td>John Doe</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>DEL-2024-0522</strong></td>
+                                            <td><span class="badge badge-danger">Delivery</span></td>
+                                            <td>Samsung Galaxy S24</td>
+                                            <td style="color: var(--danger);">-75</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 15, 2024 11:20</td>
+                                            <td>Jane Smith</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>TRF-2024-0156</strong></td>
+                                            <td><span class="badge badge-info">Transfer</span></td>
+                                            <td>AirPods Pro 2nd Gen</td>
+                                            <td>50 →</td>
+                                            <td>WH-A → WH-B</td>
+                                            <td>Jan 15, 2024 09:45</td>
+                                            <td>Mike Johnson</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ADJ-2024-0089</strong></td>
+                                            <td><span class="badge badge-warning">Adjustment</span></td>
+                                            <td>USB-C Hub 7-in-1</td>
+                                            <td style="color: var(--danger);">-5</td>
+                                            <td>Warehouse C</td>
+                                            <td>Jan 14, 2024 16:00</td>
+                                            <td>John Doe</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>REC-2024-0846</strong></td>
+                                            <td><span class="badge badge-success">Receipt</span></td>
+                                            <td>MacBook Pro 16" M3</td>
+                                            <td style="color: var(--success);">+30</td>
+                                            <td>Warehouse A</td>
+                                            <td>Jan 14, 2024 10:30</td>
+                                            <td>Jane Smith</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warehouse Settings Page -->
+                <div class="page" id="warehouse-page">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h3 class="card-title">Warehouse Overview</h3>
+                            <button class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add Warehouse
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                                <div style="background: var(--bg-tertiary); border-radius: 16px; padding: 24px;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                        <h4 style="font-weight: 600;">Warehouse A - Main</h4>
+                                        <span class="badge badge-success">Active</span>
+                                    </div>
+                                    <div
+                                        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Total Capacity</div>
+                                            <div style="font-weight: 600;">10,000 units</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Current Stock</div>
+                                            <div style="font-weight: 600;">7,842 units</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Racks</div>
+                                            <div style="font-weight: 600;">24</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Utilization</div>
+                                            <div style="font-weight: 600; color: var(--success);">78.4%</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary" style="width: 100%;">Manage</button>
+                                </div>
+                                <div style="background: var(--bg-tertiary); border-radius: 16px; padding: 24px;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                        <h4 style="font-weight: 600;">Warehouse B - Secondary</h4>
+                                        <span class="badge badge-success">Active</span>
+                                    </div>
+                                    <div
+                                        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Total Capacity</div>
+                                            <div style="font-weight: 600;">8,000 units</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Current Stock</div>
+                                            <div style="font-weight: 600;">5,234 units</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Racks</div>
+                                            <div style="font-weight: 600;">18</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Utilization</div>
+                                            <div style="font-weight: 600; color: var(--warning);">65.4%</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary" style="width: 100%;">Manage</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Warehouse A - Rack View</h3>
+                            <span style="font-size: 14px; color: var(--text-muted);">Drag and drop to reorganize</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="rack-grid">
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">A-01</span>
+                                    <span class="rack-slot-qty">145 units</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">A-02</span>
+                                    <span class="rack-slot-qty">230 units</span>
+                                </div>
+                                <div class="rack-slot low-stock">
+                                    <span class="rack-slot-code">A-03</span>
+                                    <span class="rack-slot-qty">12 units</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">A-04</span>
+                                    <span class="rack-slot-qty">89 units</span>
+                                </div>
+                                <div class="rack-slot">
+                                    <span class="rack-slot-code">A-05</span>
+                                    <span class="rack-slot-qty">Empty</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">A-06</span>
+                                    <span class="rack-slot-qty">320 units</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">B-01</span>
+                                    <span class="rack-slot-qty">180 units</span>
+                                </div>
+                                <div class="rack-slot low-stock">
+                                    <span class="rack-slot-code">B-02</span>
+                                    <span class="rack-slot-qty">8 units</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">B-03</span>
+                                    <span class="rack-slot-qty">95 units</span>
+                                </div>
+                                <div class="rack-slot">
+                                    <span class="rack-slot-code">B-04</span>
+                                    <span class="rack-slot-qty">Empty</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">B-05</span>
+                                    <span class="rack-slot-qty">210 units</span>
+                                </div>
+                                <div class="rack-slot occupied">
+                                    <span class="rack-slot-code">B-06</span>
+                                    <span class="rack-slot-qty">155 units</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 24px; margin-top: 20px; justify-content: center;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <div
+                                        style="width: 16px; height: 16px; background: rgba(16, 185, 129, 0.2); border: 2px solid var(--success); border-radius: 4px;">
+                                    </div>
+                                    <span>Occupied</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <div
+                                        style="width: 16px; height: 16px; background: rgba(245, 158, 11, 0.2); border: 2px solid var(--warning); border-radius: 4px;">
+                                    </div>
+                                    <span>Low Stock</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <div
+                                        style="width: 16px; height: 16px; background: var(--bg-tertiary); border: 2px dashed var(--border); border-radius: 4px;">
+                                    </div>
+                                    <span>Empty</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div class="page" id="profile-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Profile Settings</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+                                <div style="text-align: center;">
+                                    <div
+                                        style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: 600; margin-bottom: 16px;">
+                                        JD</div>
+                                    <button class="btn btn-secondary">Change Photo</button>
+                                </div>
+                                <div style="flex: 1; min-width: 300px;">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">First Name</label>
+                                            <input type="text" class="form-input" value="John">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Last Name</label>
+                                            <input type="text" class="form-input" value="Doe">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-input" value="john.doe@coreinventory.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Role</label>
+                                            <select class="form-select">
+                                                <option selected>Admin</option>
+                                                <option>Manager</option>
+                                                <option>Operator</option>
+                                                <option>Viewer</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Default Warehouse</label>
+                                            <select class="form-select">
+                                                <option selected>Warehouse A - Main</option>
+                                                <option>Warehouse B - Secondary</option>
+                                                <option>Warehouse C - Overflow</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 24px;">
+                                        <button class="btn btn-primary">Save Changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Product Detail Panel -->
+    <div class="detail-panel-overlay" id="detailOverlay"></div>
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <h3 style="font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 600;">Product Details</h3>
+            <button class="detail-close" id="detailClose">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="detail-body">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div
+                    style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 600; margin: 0 auto 16px;">
+                    IP15</div>
+                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">iPhone 15 Pro Max</h2>
+                <code
+                    style="background: var(--bg-tertiary); padding: 6px 12px; border-radius: 8px; font-size: 14px;">IPH15PM-256</code>
+            </div>
+
+            <div class="adjustment-card"
+                style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1)); border: 1px solid var(--danger);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <div>
+                        <div style="font-weight: 600; color: var(--danger);">Low Stock Alert</div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">Stock below minimum threshold (10)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="form-section-title">Stock Information</h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="background: var(--bg-tertiary); padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Current Stock</div>
+                        <div style="font-size: 24px; font-weight: 700;">8</div>
+                    </div>
+                    <div style="background: var(--bg-tertiary); padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Min Threshold</div>
+                        <div style="font-size: 24px; font-weight: 700;">10</div>
+                    </div>
+                    <div style="background: var(--bg-tertiary); padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Incoming</div>
+                        <div style="font-size: 24px; font-weight: 700; color: var(--success);">150</div>
+                    </div>
+                    <div style="background: var(--bg-tertiary); padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Reserved</div>
+                        <div style="font-size: 24px; font-weight: 700; color: var(--warning);">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="form-section-title">Product Details</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Category</span>
+                        <span style="font-weight: 500;">Electronics</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Location</span>
+                        <span style="font-weight: 500;">WH-A / Rack-01</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Unit Price</span>
+                        <span style="font-weight: 500;">$1,199.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Last Updated</span>
+                        <span style="font-weight: 500;">Jan 15, 2024</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-primary" style="flex: 1;">Edit Product</button>
+                <button class="btn btn-secondary" style="flex: 1;">View History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" id="addProductModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Product</h3>
+                <button class="modal-close" id="modalClose">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" id="pname" class="form-input" placeholder="Enter product name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SKU</label>
+                        <input type="text" id="psku" class="form-input" placeholder="e.g., PROD-001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select">
+                            <option>Select category...</option>
+                            <option>Electronics</option>
+                            <option>Accessories</option>
+                            <option>Components</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Stock</label>
+                        <input type="number" id="pstock" class="form-input" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Min Threshold</label>
+                        <input type="number" id="pmin" class="form-input" placeholder="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Warehouse</label>
+                        <select class="form-select">
+                            <option>Select warehouse...</option>
+                            <option>Warehouse A - Main</option>
+                            <option>Warehouse B - Secondary</option>
+                            <option>Warehouse C - Overflow</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rack Location</label>
+                        <select class="form-select">
+                            <option>Select rack...</option>
+                            <option>Rack A-01</option>
+                            <option>Rack A-02</option>
+                            <option>Rack A-03</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input form-textarea"
+                            placeholder="Enter product description..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn-primary" onclick="addProduct()">Add Product</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            loadDashboard()
+            loadProducts()
+
+        })
+
+        if (!localStorage.getItem("token")) {
+            window.location.href = "login.html"
+        }
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+
+            // Update icon
+            if (newTheme === 'dark') {
+                themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            } else {
+                themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>';
+            }
+        });
+
+        async function loadDashboard() {
+
+            const token = localStorage.getItem("token")
+
+            const res = await fetch("http://localhost:8080/api/dashboard", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+
+            const response = await res.json()
+
+            const d = response.data
+
+            document.getElementById("totalStock").innerText = d.totalStock
+            document.getElementById("lowStock").innerText = d.lowStockCount
+            document.getElementById("outStock").innerText = d.outOfStockCount
+
+        }
+
+
+        // Sidebar Collapse
+        const sidebar = document.getElementById('sidebar');
+        const collapseBtn = document.getElementById('collapseBtn');
+
+        collapseBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        // Mobile Menu
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+
+        // Navigation
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
+        const pageTitle = document.getElementById('pageTitle');
+
+        const pageTitles = {
+            'dashboard': 'Dashboard',
+            'products': 'Products',
+            'receipts': 'Receipts',
+            'deliveries': 'Delivery Orders',
+            'transfers': 'Internal Transfers',
+            'adjustments': 'Inventory Adjustment',
+            'history': 'Move History',
+            'warehouse': 'Warehouse Settings',
+            'profile': 'Profile'
+        };
+
+        navItems.forEach(item => {
+
+            item.addEventListener('click', () => {
+
+                const page = item.getAttribute('data-page');
+
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+
+                pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(`${page}-page`).classList.add('active');
+
+                pageTitle.textContent = pageTitles[page];
+
+                // 🔴 ADD THIS
+                if (page === "products") {
+                    loadProducts()
+                }
+
+                if (page === "dashboard") {
+                    loadDashboard()
+                }
+
+                sidebar.classList.remove('mobile-open');
+
+            });
+
+        });
+        // Notifications Dropdown
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+
+        notificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', () => {
+            notificationsDropdown.classList.remove('open');
+        });
+
+        // Product Detail Panel
+        const detailPanel = document.getElementById('detailPanel');
+        const detailOverlay = document.getElementById('detailOverlay');
+        const detailClose = document.getElementById('detailClose');
+
+
+
+        detailClose.addEventListener('click', () => {
+            detailPanel.classList.remove('open');
+            detailOverlay.classList.remove('open');
+        });
+
+        detailOverlay.addEventListener('click', () => {
+            detailPanel.classList.remove('open');
+            detailOverlay.classList.remove('open');
+        });
+
+        // Add Product Modal
+        const addProductBtn = document.getElementById('addProductBtn');
+        const addProductModal = document.getElementById('addProductModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalCancel = document.getElementById('modalCancel');
+
+        addProductBtn.addEventListener('click', () => {
+            addProductModal.classList.add('open');
+        });
+
+        modalClose.addEventListener('click', () => {
+            addProductModal.classList.remove('open');
+        });
+
+        modalCancel.addEventListener('click', () => {
+            addProductModal.classList.remove('open');
+        });
+
+        addProductModal.addEventListener('click', (e) => {
+            if (e.target === addProductModal) {
+                addProductModal.classList.remove('open');
+            }
+        });
+
+        // Adjustment Calculator
+        const countedQty = document.getElementById('countedQty');
+        const difference = document.getElementById('difference');
+
+        if (countedQty) {
+            countedQty.addEventListener('input', () => {
+                const systemQty = 145;
+                const diff = parseInt(countedQty.value) - systemQty;
+                difference.textContent = diff >= 0 ? `+${diff}` : diff;
+                difference.className = 'adjustment-value ' + (diff >= 0 ? 'positive' : 'negative');
+            });
+        }
+
+        // Initialize Chart
+        const ctx = document.getElementById('activityChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Incoming',
+                            data: [150, 220, 180, 290, 250, 120, 180],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Outgoing',
+                            data: [120, 180, 150, 220, 200, 80, 140],
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        async function addProduct() {
+
+            const token = localStorage.getItem("token")
+
+            const name = document.getElementById("pname").value
+            const sku = document.getElementById("psku").value
+            const stock = document.getElementById("pstock").value
+            const min = document.getElementById("pmin").value
+
+            if (!name || !sku || !stock) {
+                alert("Please fill all fields")
+                return
+            }
+
+            const res = await fetch("http://localhost:8080/api/products", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+
+                body: JSON.stringify({
+                    name: name,
+                    sku: sku,
+                    currentStock: parseInt(stock),
+                    minThreshold: parseInt(min)
+                })
+
+            })
+
+            const data = await res.json()
+
+            if (data.success) {
+
+                alert("Product Added Successfully")
+
+                document.getElementById("addProductModal").classList.remove("open")
+
+                loadProducts()
+                loadDashboard()
+
+            } else {
+
+                alert(data.message)
+
+            }
+
+        }
+
+        // LOAD PRODUCTS FROM BACKEND
+        async function loadProducts() {
+
+            const token = localStorage.getItem("token")
+
+            const res = await fetch("http://localhost:8080/api/products", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+
+            const response = await res.json()
+
+            if (!response.success) {
+                alert("Failed to load products")
+                return
+            }
+
+            const products = response.data
+
+            const table = document.getElementById("productTable")
+
+            table.innerHTML = ""
+
+            products.forEach(p => {
+
+                let status = ""
+
+                if (p.currentStock == 0) {
+                    status = '<span class="badge badge-danger">Out of Stock</span>'
+                }
+                else if (p.currentStock < p.minThreshold) {
+                    status = '<span class="badge badge-warning">Low Stock</span>'
+                }
+                else {
+                    status = '<span class="badge badge-success">In Stock</span>'
+                }
+
+                table.innerHTML += `
+<tr class="product-row">
+<td>${p.name}</td>
+<td>${p.sku}</td>
+<td>${p.categoryName || "-"}</td>
+<td>${p.currentStock}</td>
+<td>${p.warehouseName || "-"}</td>
+<td>${status}</td>
+<td>
+<button class="btn btn-secondary viewBtn" data-id="${p.id}">
+View
+</button>
+</td>
+</tr>
+`
+
+            })
+
+        }
+
+
+
+
+
+
+        document.addEventListener("click", function (e) {
+
+            const btn = e.target.closest(".viewBtn")
+
+            if (btn) {
+
+                const id = btn.dataset.id
+
+                alert("Product ID: " + id)
+
+                detailPanel.classList.add("open")
+                detailOverlay.classList.add("open")
+
+            }
+
+        })
+    </script>
+</body>
+
+</html>
